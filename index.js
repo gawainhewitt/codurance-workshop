@@ -1,12 +1,21 @@
 let synthNote = "C3"; // uses note names see https://newt.phys.unsw.edu.au/jw/notes.html
 let duration = "8n"; // https://tonejs.github.io/docs/14.7.77/type/Time
 let synthVolume = -10;
-let volumeSlider = document.getElementById("volume");
+let frequency = 200;
 
-volume.oninput = function() {
+let volumeSlider = document.getElementById("volume");
+let cutoffSlider = document.getElementById("cutoff");
+
+volumeSlider.oninput = function() {
     synthVolume = this.value;
     synth.volume.value = synthVolume;
     sampler.volume.value = synthVolume;
+}
+
+cutoffSlider.oninput = function() {
+    frequency = this.value;
+    console.log(frequency);
+    synth.filterEnvelope.baseFrequency = frequency;
 }
 
 // set up the synth
@@ -17,8 +26,28 @@ const synth = new Tone.MonoSynth({
     },
     volume: synthVolume,
     envelope: {
-        attack: 0.1
-    }
+        attack: 3,
+        attackCurve: "linear",
+        decay: 0,
+        release: 2,
+        releaseCurve: "linear",
+        sustain: 0.4
+      },
+      filter: {
+        Q: 0,
+        rolloff: -12,
+        type: "lowpass",
+        frequency: 0
+      },
+      filterEnvelope : {
+        attack : 0.01,
+        decay : 0.01,
+        sustain : 0.01,
+        release : 0.01,
+        baseFrequency : 200,
+        octaves : 2,
+        exponent : 2
+      } 
 }).toDestination();
 
 // set up the sampler
