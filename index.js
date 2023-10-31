@@ -1,6 +1,13 @@
 let synthNote = "C3"; // uses note names see https://newt.phys.unsw.edu.au/jw/notes.html
 let duration = "8n"; // https://tonejs.github.io/docs/14.7.77/type/Time
 let synthVolume = -10;
+let volumeSlider = document.getElementById("volume");
+
+volume.oninput = function() {
+    synthVolume = this.value;
+    synth.volume.value = synthVolume;
+    sampler.volume.value = synthVolume;
+}
 
 // set up the synth
 
