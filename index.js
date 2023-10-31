@@ -2,14 +2,17 @@ let synthNote = "C3"; // uses note names see https://newt.phys.unsw.edu.au/jw/no
 let duration = "8n"; // https://tonejs.github.io/docs/14.7.77/type/Time
 let synthVolume = -10;
 let frequency = 200;
+let delayTime = "0.6";
+let delayFeedback = 0.6;
 
 let volumeSlider = document.getElementById("volume");
 let cutoffSlider = document.getElementById("cutoff");
 
 volumeSlider.oninput = function() {
-    synthVolume = this.value;
-    synth.volume.value = synthVolume;
-    sampler.volume.value = synthVolume;
+    synthVolume = this.value/100;
+    gainNode.gain.value = synthVolume;
+    // synth.volume.value = synthVolume;
+    // sampler.volume.value = synthVolume;
 }
 
 cutoffSlider.oninput = function() {
@@ -17,6 +20,12 @@ cutoffSlider.oninput = function() {
     console.log(frequency);
     synth.filterEnvelope.baseFrequency = frequency;
 }
+
+const gainNode = new Tone.Gain().toDestination();
+
+// set up the delay
+
+const feedbackDelay = new Tone.FeedbackDelay(delayTime, delayFeedback).connect(gainNode);
 
 // set up the synth
 
@@ -48,7 +57,7 @@ const synth = new Tone.MonoSynth({
         octaves : 2,
         exponent : 2
       } 
-}).toDestination();
+}).connect(feedbackDelay)
 
 // set up the sampler
 
@@ -57,7 +66,7 @@ const sampler = new Tone.Sampler({
 		A1: "sounds/ruthLoop4.flac"
 	},
     volume: synthVolume
-}).toDestination();
+}).connect(feedbackDelay);
 
 function setup() {
     Tone.start(); // strictly speaking you have to invoke Tone.start() before you can make a sound. In practice you can get away without doing this
