@@ -4,9 +4,15 @@ let synthVolume = -10;
 let frequency = 200;
 let delayTime = "0.6";
 let delayFeedback = 0.6;
+let whichKey = [0,0,0,0,0,0,0,0,0];
+const notes = ["F3", "G#3", "C4", "D#4", "G4"];    // array containing our musical notes that we are currently using (tone.js will respond to these as is)
+
 
 let volumeSlider = document.getElementById("volume");
 let cutoffSlider = document.getElementById("cutoff");
+
+document.addEventListener('keydown', handleKeyDown); //add listener for keyboard input
+document.addEventListener('keyup', handleKeyUp); //add listener for keyboard input
 
 volumeSlider.oninput = function() {
     synthVolume = this.value/100;
@@ -73,9 +79,9 @@ function setup() {
     alert("sound started!");
 }
 
-function playSynth() {
+function playSynth(i) {
     // synth.triggerAttackRelease(synthNote, duration); // plays a sound of a specific duration
-    synth.triggerAttack(synthNote); // plays a sound until you tell it to stop
+    synth.triggerAttack(notes[i]); // plays a sound until you tell it to stop
 }
 
 function stopSynth() {
@@ -85,3 +91,82 @@ function stopSynth() {
 function playSample() {
     sampler.triggerAttackRelease(synthNote);
 }
+
+function handleKeyDown(e) {
+
+    var key = e.code;
+    console.log("keydown "+key); //debugging
+  
+    switch(key) {  /// working here! - retriggering keys so remove the play synth and do a for loop on the array to play
+      case "ArrowLeft" :
+        if(whichKey[0] === 0) {
+          playSynth(0);
+          whichKey[0] = 1;
+          break;
+        } else {
+          break;
+        }
+      case "ArrowRight" :
+        if(whichKey[1] === 0) {
+          playSynth(1);
+          whichKey[1] = 1;
+          break;
+        } else {
+          break;
+        }
+      case "ArrowDown" :
+        if(whichKey[2] === 0) {
+          playSynth(2);
+          whichKey[2] = 1;
+          break;
+        } else {
+          break;
+        }
+      case "ArrowUp" :
+        if(whichKey[3] === 0) {
+          playSynth(3);
+          whichKey[3] = 1;
+          break;
+        } else {
+          break;
+        }
+      case "Space" :
+        if(whichKey[4] === 0) {
+          playSynth(4);
+          whichKey[4] = 1;
+          break;
+        } else {
+          break;
+        }
+    }
+  }
+  
+  function handleKeyUp(e) {
+
+    var key = e.code;
+    console.log("keyup "+key); //debugging
+
+    switch(key) {
+      case "ArrowLeft" :
+        stopSynth();
+        whichKey[0] = 0;
+        break;
+      case "ArrowRight" :
+        stopSynth();
+        whichKey[1] = 0;
+        break;
+      case "ArrowDown" :
+        stopSynth(2);
+        whichKey[2] = 0;
+        break;
+      case "ArrowUp" :
+        stopSynth(3);
+        whichKey[3] = 0;
+        break;
+      case "Space" :
+        stopSynth(4);
+        whichKey[4] = 0;
+        break;
+    }
+  
+  }
