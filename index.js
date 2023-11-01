@@ -1,15 +1,19 @@
-let synthNote = "C3"; // uses note names see https://newt.phys.unsw.edu.au/jw/notes.html
 let duration = "8n"; // https://tonejs.github.io/docs/14.7.77/type/Time
+let sequencerSpeed = "8n";
 let synthVolume = -10;
 let frequency = 200;
 let delayTime = "0.6";
 let delayFeedback = 0.6;
-let whichKey = [0,0,0,0,0,0,0,0,0];
 const notes = ["F3", "G#3", "C4", "D#4", "G4"];    // array containing our musical notes that we are currently using (tone.js will respond to these as is)
+let sequencerNote = 0;
+
 
 
 let volumeSlider = document.getElementById("volume");
 let cutoffSlider = document.getElementById("cutoff");
+
+const visualisationMeter = new Tone.Meter();
+visualisationMeter.normalRange = true;
 
 document.addEventListener('keydown', handleKeyDown); //add listener for keyboard input
 document.addEventListener('keyup', handleKeyUp); //add listener for keyboard input
@@ -17,21 +21,21 @@ document.addEventListener('keyup', handleKeyUp); //add listener for keyboard inp
 volumeSlider.oninput = function() {
     synthVolume = this.value/100;
     gainNode.gain.value = synthVolume;
-    // synth.volume.value = synthVolume;
-    // sampler.volume.value = synthVolume;
 }
 
 cutoffSlider.oninput = function() {
     frequency = this.value;
-    console.log(frequency);
     synth.filterEnvelope.baseFrequency = frequency;
 }
 
 const gainNode = new Tone.Gain().toDestination();
 
+gainNode.connect(visualisationMeter);
+
 // set up the delay
 
 const feedbackDelay = new Tone.FeedbackDelay(delayTime, delayFeedback).connect(gainNode);
+
 
 // set up the synth
 
@@ -74,66 +78,84 @@ const sampler = new Tone.Sampler({
     volume: synthVolume
 }).connect(feedbackDelay);
 
-function setup() {
+function setupTone() {
     Tone.start(); // strictly speaking you have to invoke Tone.start() before you can make a sound. In practice you can get away without doing this
-    alert("sound started!");
 }
 
-function playSynth(i) {
-    // synth.triggerAttackRelease(synthNote, duration); // plays a sound of a specific duration
-    synth.triggerAttack(notes[i]); // plays a sound until you tell it to stop
+function playSynth(i = 0) {
+    synth.triggerAttack(notes[i]); // plays a sound 
 }
 
 function stopSynth() {
     synth.triggerRelease(); // stops a sound
 }
 
-function playSample() {
-    sampler.triggerAttackRelease(synthNote);
+function playSample(i = 0) {
+    sampler.triggerAttackRelease(notes[i]);
 }
+
+function startSequence() {
+    Tone.Transport.start();
+    Tone.Transport.scheduleRepeat(repeat, sequencerSpeed);
+}
+
+function repeat() {
+    synth.triggerAttackRelease(notes[sequencerNote], duration); // plays and releases a sound of a specific duration
+    sequencerNote = (sequencerNote + 1) % notes.length;
+}
+
+function stopSequence() {
+    Tone.Transport.stop();
+    synth.triggerRelease(); // stops a sound
+
+}
+
+
+// read Qwerty keyboard and play notes from it
+
+let keyDebouncing = [0,0,0,0,0];
 
 function handleKeyDown(e) {
 
     var key = e.code;
-    console.log("keydown "+key); //debugging
   
-    switch(key) {  /// working here! - retriggering keys so remove the play synth and do a for loop on the array to play
+    switch(key) {  
       case "ArrowLeft" :
-        if(whichKey[0] === 0) {
+        if(keyDebouncing[0] === 0) {
           playSynth(0);
-          whichKey[0] = 1;
+          keyDebouncing[0] = 1;
           break;
         } else {
           break;
         }
       case "ArrowRight" :
-        if(whichKey[1] === 0) {
+        if(keyDebouncing[1] === 0) {
           playSynth(1);
-          whichKey[1] = 1;
+          keyDebouncing[1] = 1;
           break;
         } else {
           break;
         }
       case "ArrowDown" :
-        if(whichKey[2] === 0) {
+        if(keyDebouncing[2] === 0) {
           playSynth(2);
-          whichKey[2] = 1;
+          keyDebouncing[2] = 1;
           break;
         } else {
           break;
         }
       case "ArrowUp" :
-        if(whichKey[3] === 0) {
+        if(keyDebouncing[3] === 0) {
           playSynth(3);
-          whichKey[3] = 1;
+          keyDebouncing[3] = 1;
           break;
         } else {
           break;
         }
       case "Space" :
-        if(whichKey[4] === 0) {
+        if(keyDebouncing[4] === 0) {
           playSynth(4);
-          whichKey[4] = 1;
+          keyDebouncing[4] = 1;
           break;
         } else {
           break;
@@ -144,29 +166,50 @@ function handleKeyDown(e) {
   function handleKeyUp(e) {
 
     var key = e.code;
-    console.log("keyup "+key); //debugging
 
     switch(key) {
       case "ArrowLeft" :
         stopSynth();
-        whichKey[0] = 0;
+        keyDebouncing[0] = 0;
         break;
       case "ArrowRight" :
         stopSynth();
-        whichKey[1] = 0;
+        keyDebouncing[1] = 0;
         break;
       case "ArrowDown" :
-        stopSynth(2);
-        whichKey[2] = 0;
+        stopSynth();
+        keyDebouncing[2] = 0;
         break;
       case "ArrowUp" :
-        stopSynth(3);
-        whichKey[3] = 0;
+        stopSynth();
+        keyDebouncing[3] = 0;
         break;
       case "Space" :
-        stopSynth(4);
-        whichKey[4] = 0;
+        stopSynth();
+        keyDebouncing[4] = 0;
         break;
     }
-  
   }
+
+
+
+// visualisation using P5.js
+
+const canvasSize = 200;
+const visualisationColour = 255; 
+const backgroundColour = 0;
+const backgroundAlpha = 30;
+
+  function setup() {
+    createCanvas(canvasSize, canvasSize);
+    stroke(visualisationColour);
+    noFill();
+  }  
+
+  function draw() {
+    background(backgroundColour, backgroundAlpha);
+
+    let level = visualisationMeter.getValue();
+
+    circle(canvasSize/2, canvasSize/2, level * (canvasSize * 2))
+  }  
